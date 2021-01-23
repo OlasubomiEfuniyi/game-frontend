@@ -3,6 +3,7 @@ import React from "react";
 import Welcome from "./components/welcome";
 import Create from "./components/create";
 import Join from "./components/join";
+import Wait from "./components/wait";
 
 const WELCOMING = 0;
 const JOINING = 1;
@@ -25,12 +26,15 @@ class App extends React.Component {
       //5. PLAYING - A user is playing a game
       //6. FINISHED - A user has finished playing a game
       gameState: [WELCOMING], //game states will be pushed into this array to allow a user to go back if they want to
-      gameCode: null
+      gameCode: null, //The unique code used by the server to identify the game world
+      gameWorld: null, //The web socket object used by this frontend to interract with the game world
+      playerName: "", //The name of the player in the game world
+      playerWaitlist:[]
     }
   }
 
   componentDidMount() {
-    ws = new WebSocket("ws://localhost:8080"); //This web socket is used to comminicate with the server to setup a game
+    ws = new WebSocket("ws://localhost:1024"); //This web socket is used to comminicate with the server to setup a game
 
     ws.addEventListener('error', (err) => {
       console.log(`Error occured while creating web socket: ${err}`);
@@ -50,10 +54,33 @@ class App extends React.Component {
           this.state.gameState.push(CREATING);
           this.setState({gameCode: msg.gameCode, gameState: this.state.gameState});
           break;
+        case "PORT":
+          this.connectToGameWorld(msg.port);
+          break;
         default:
+          console.log(`Invalid response from server ${msg}`);
           break;
       }
+    } else {
+      console.log("Error communicating with the server");
     }
+  }
+
+  handleGameWorldMessage(msg) {
+    if(msg.status === "SUCCESS") {
+      switch(msg.type) {
+        case "CONNECT":
+          this.state.gameState.push(WAITING);
+          this.setState({gameState: this.state.gameState, playerWaitlist: msg.playerWaitlist});
+          break;
+        default:
+          console.log(`Invalid response from server ${msg}`);
+          break;
+      }
+    } else {
+      console.log("Error communicating with the game world");
+    }
+    
   }
 
   handleCreateGame() {
@@ -64,19 +91,52 @@ class App extends React.Component {
     ws.send(JSON.stringify(command));
   } 
 
+  //Transition to the joining screen
   handleJoinGame() {
     this.state.gameState.push(JOINING);
     this.setState({gameState: this.state.gameState});
   }
 
-  handleJoin() {
-
+  handleJoin(code, name) {
+    //Send a request to the server for the port number
+    //associated with the game code
+    console.log(code);
+    this.setState({playerName: name}, () => {
+      let command = {
+        type: "PORT",
+        gameCode: code
+      };
+  
+      ws.send(JSON.stringify(command));
+    });
   }
 
   handleBack() {
     this.state.gameState.pop();
 
     this.setState({gameState: this.state.gameState});
+  }
+
+
+  connectToGameWorld(port) {
+    let gameWorld = new WebSocket(`ws://localhost:${port}`);
+
+    this.setState({gameWorld: gameWorld}, () => {
+      this.state.gameWorld.addEventListener('open', () => {
+        let command = {
+          type: "CONNECT",
+          name: this.state.playerName
+        };
+    
+        this.state.gameWorld.send(JSON.stringify(command));
+      });
+
+      this.state.gameWorld.addEventListener('message', (message) => {
+        let msg = JSON.parse(message.data);
+        console.log(msg);
+        this.handleGameWorldMessage(msg);
+      });
+    });
   }
 
   render() {
@@ -102,11 +162,16 @@ class App extends React.Component {
         return (
           <div id="app-container">
             <Join 
-            handleJoin={() => this.handleJoin()}
+            handleJoin={(code, name) => this.handleJoin(code, name)}
             handleBack={() => this.handleBack()} />
           </div>
         );
-
+      case WAITING:
+        return (
+          <div id="app-container">
+            <Wait waitlist = {this.state.playerWaitlist} />
+          </div>
+        );
       default:
         return (
           <div id="app-container">

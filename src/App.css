@@ -9,7 +9,7 @@ html, body, #root, #app-container {
   align-items: center;
 }
 
-#welcome-container, #create-container, #join-container {
+#welcome-container, #create-container, #join-container, #wait-container {
   width: 100%;
   text-align: center;
 }
