@@ -5,27 +5,41 @@ class Join extends React.Component {
         super(props);
         this.state = {
             name: "",
-            code: ""
+            code: "",
+            joinEnabled: false
         };
     }
 
     handleNameChange(newName) {
-        this.setState({name: newName});
+        if(newName.length != 0 && this.state.code.length != 0) {
+            this.setState({name: newName, joinEnabled: true});
+        } else {
+            this.setState({name: newName, joinEnabled: false});
+        }
     }
 
     handleCodeChange(newCode) {
-        this.setState({code: newCode});
+        if(newCode.length != 0 && this.state.name.length != 0) {
+            this.setState({code: newCode, joinEnabled: true});
+        } else {
+            this.setState({code: newCode, joinEnabled: false});
+        }
     }
+
+    
 
     render() {
         return (
             <div id="join-container">
-                <input id="code" placeholder="Enter Game Code" onInput={(e) => this.handleCodeChange(e.target.value)} />
+                <input className="join-input"id="code" placeholder="Enter Game Code" onInput={(e) => this.handleCodeChange(e.target.value)} />
                 <br />
-                <input id="name" placeholder="Enter Player Name" onInput={(e) => this.handleNameChange(e.target.value)} />
+                <input className="join-input" id="name" placeholder="Enter Player Name" onInput={(e) => this.handleNameChange(e.target.value)} />
                 <br />
-                <button onClick={(e) => this.props.handleJoin(this.state.code, this.state.name)}>Join</button>
-                <button onClick={(e) => this.props.handleBack() }>Back</button>
+                {this.state.joinEnabled ? 
+                    <button className="join-button" onClick={(e) => this.props.handleJoin(this.state.code, this.state.name)}>Join</button> :
+                    <button className="join-button" onClick={(e) => this.props.handleJoin(this.state.code, this.state.name)} disabled>Join</button>
+                }
+                <button className="join-button" onClick={(e) => this.props.handleBack() }>Back</button>
             </div>
         );
     }
