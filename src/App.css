@@ -27,7 +27,7 @@ html, body, #root, #app-container {
   padding: 5px;
 }
 
-.join-button {
+.small-button {
   width: 60px;
   height: 40px;
   margin-right: 10px;
@@ -38,7 +38,23 @@ html, body, #root, #app-container {
   border-radius: 5px;
 }
 
-.join-button:disabled {
+.small-button:disabled {
   background-color: grey;
   color: black;
+}
+
+.main-text {
+  font-family: 'Roboto', sans-serif;
+  font-size: 50px;
+}
+
+.big-button {
+  width: 100px;
+  height: 40px;
+  margin-right: 10px;
+  padding: 5px;
+  background-color: #1DB954;
+  color: white;
+  border: 2px solid white;
+  border-radius: 5px;
 }

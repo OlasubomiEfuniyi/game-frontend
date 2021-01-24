@@ -8,8 +8,8 @@ class Create extends React.Component {
                 <p>Your game code is {this.props.gameCode}</p>
                 <p>Copy and share the game code with other players</p>
 
-                <button onClick={(e) => this.props.handleJoinGame()}>Join Game</button>
-                <button onClick={(e) => this.props.handleBack()}>Back</button>
+                <button className="big-button" onClick={(e) => this.props.handleJoinGame()}>Join Game</button>
+                <button className="small-button" onClick={(e) => this.props.handleBack()}>Back</button>
             </div>
         );
     }

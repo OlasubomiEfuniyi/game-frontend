@@ -36,10 +36,10 @@ class Join extends React.Component {
                 <input className="join-input" id="name" placeholder="Enter Player Name" onInput={(e) => this.handleNameChange(e.target.value)} />
                 <br />
                 {this.state.joinEnabled ? 
-                    <button className="join-button" onClick={(e) => this.props.handleJoin(this.state.code, this.state.name)}>Join</button> :
-                    <button className="join-button" onClick={(e) => this.props.handleJoin(this.state.code, this.state.name)} disabled>Join</button>
+                    <button className="small-button" onClick={(e) => this.props.handleJoin(this.state.code, this.state.name)}>Join</button> :
+                    <button className="small-button" onClick={(e) => this.props.handleJoin(this.state.code, this.state.name)} disabled>Join</button>
                 }
-                <button className="join-button" onClick={(e) => this.props.handleBack() }>Back</button>
+                <button className="small-button" onClick={(e) => this.props.handleBack() }>Back</button>
             </div>
         );
     }
