@@ -11,7 +11,7 @@ class Join extends React.Component {
     }
 
     handleNameChange(newName) {
-        if(newName.length != 0 && this.state.code.length != 0) {
+        if(newName.length !== 0 && this.state.code.length !== 0) {
             this.setState({name: newName, joinEnabled: true});
         } else {
             this.setState({name: newName, joinEnabled: false});
@@ -19,7 +19,7 @@ class Join extends React.Component {
     }
 
     handleCodeChange(newCode) {
-        if(newCode.length != 0 && this.state.name.length != 0) {
+        if(newCode.length !== 0 && this.state.name.length !== 0) {
             this.setState({code: newCode, joinEnabled: true});
         } else {
             this.setState({code: newCode, joinEnabled: false});

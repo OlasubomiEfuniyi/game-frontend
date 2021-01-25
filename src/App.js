@@ -4,6 +4,7 @@ import Welcome from "./components/welcome";
 import Create from "./components/create";
 import Join from "./components/join";
 import Wait from "./components/wait";
+import Game from "./components/game"
 
 const WELCOMING = 0;
 const JOINING = 1;
@@ -28,6 +29,7 @@ class App extends React.Component {
       gameState: [WELCOMING], //game states will be pushed into this array to allow a user to go back if they want to
       gameCode: null, //The unique code used by the server to identify the game world
       gameWorld: null, //The web socket object used by this frontend to interract with the game world
+      gameData: null, //An object that contains information about all the players and other game pieces
       playerName: "", //The name of the player in the game world
       playerWaitlist:[]
     }
@@ -70,8 +72,12 @@ class App extends React.Component {
     if(msg.status === "SUCCESS") {
       switch(msg.type) {
         case "CONNECT":
-          this.state.gameState.push(WAITING);
-          this.setState({gameState: this.state.gameState, playerWaitlist: msg.playerWaitlist});
+          //Once you connect to a game world, you cannot go back so no need to keep track of previous game states
+          this.setState({gameState: [WAITING], playerWaitlist: msg.playerWaitlist});
+          break;
+        case "START":
+          //Once the game is started, you cannot go back so no need to keep track of previous game states
+          this.setState({gameState: [PLAYING], playerWaitlist: [], gameData: msg.gameData});
           break;
         default:
           console.log(`Invalid response from server ${msg}`);
@@ -117,6 +123,16 @@ class App extends React.Component {
     this.setState({gameState: this.state.gameState});
   }
 
+
+  //This function sends a request to the server to start the game
+  handleStartGame() {
+    let command = {
+      type: "START",
+      gameCode: this.state.gameCode
+    };
+
+    this.state.gameWorld.send(JSON.stringify(command));
+  }
 
   connectToGameWorld(port) {
     let gameWorld = new WebSocket(`ws://localhost:${port}`);
@@ -169,7 +185,13 @@ class App extends React.Component {
       case WAITING:
         return (
           <div id="app-container">
-            <Wait waitlist = {this.state.playerWaitlist} />
+            <Wait waitlist = {this.state.playerWaitlist} handleStartGame={() => this.handleStartGame()}/>
+          </div>
+        );
+      case PLAYING:
+        return (
+          <div id="app-container">
+            <Game gamePieces={["data"]} />
           </div>
         );
       default:
