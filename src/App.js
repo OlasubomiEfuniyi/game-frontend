@@ -27,11 +27,12 @@ class App extends React.Component {
       //5. PLAYING - A user is playing a game
       //6. FINISHED - A user has finished playing a game
       gameState: [WELCOMING], //game states will be pushed into this array to allow a user to go back if they want to
-      gameCode: null, //The unique code used by the server to identify the game world
-      gameWorld: null, //The web socket object used by this frontend to interract with the game world
-      gameData: null, //An object that contains information about all the players and other game pieces
+      gameCode: undefined, //The unique code used by the server to identify the game world
+      gameWorld: undefined, //The web socket object used by this frontend to interract with the game world
+      gameData: undefined, //An object that contains information about all the players and other game pieces
       playerName: "", //The name of the player in the game world
-      playerWaitlist:[]
+      playerWaitlist:[],
+      id: undefined, //The unique id of this player that is assigned upon connecting to a game world
     }
   }
 
@@ -73,11 +74,13 @@ class App extends React.Component {
       switch(msg.type) {
         case "CONNECT":
           //Once you connect to a game world, you cannot go back so no need to keep track of previous game states
-          this.setState({gameState: [WAITING], playerWaitlist: msg.playerWaitlist});
+          this.setState({gameState: [WAITING], playerWaitlist: msg.playerWaitlist, gameCode: msg.gameCode, id: msg.id});
           break;
         case "START":
+          let gameData = {playerData: msg.playerData, foodData: msg.foodData, leaderboard: msg.leaderboard};
+
           //Once the game is started, you cannot go back so no need to keep track of previous game states
-          this.setState({gameState: [PLAYING], playerWaitlist: [], gameData: msg.gameData});
+          this.setState({gameState: [PLAYING], playerWaitlist: [], gameData: gameData});
           break;
         default:
           console.log(`Invalid response from server ${msg}`);
@@ -148,7 +151,17 @@ class App extends React.Component {
       });
 
       this.state.gameWorld.addEventListener('message', (message) => {
-        let msg = JSON.parse(message.data);
+
+        //Use the reviver to recreate maps that were replaced with 2d arrays.
+        let msg = JSON.parse(message.data, (key, value) => {
+          if(typeof value === 'object' && value !== null) {
+            if(value.dataType === 'Map') {
+              return new Map(value.value);
+            }
+          }
+
+          return value;
+        });
         console.log(msg);
         this.handleGameWorldMessage(msg);
       });
@@ -191,7 +204,7 @@ class App extends React.Component {
       case PLAYING:
         return (
           <div id="app-container">
-            <Game gamePieces={["data"]} />
+            <Game gameData={this.state.gameData} />
           </div>
         );
       default:
