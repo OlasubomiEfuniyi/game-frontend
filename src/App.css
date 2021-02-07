@@ -96,14 +96,39 @@ html, body, #root, #app-container {
 
 /* Game styles */
 #game-container { /* This styling depends on background repeat. It repeats the small background multiple times */
+  position: fixed; /* This container div does not scroll with the page */
   width: 100%;
   height: 100%;
   background-size: 40px 40px;
   background-image: radial-gradient(circle, #000000 1px, rgba(0, 0, 0, 0) 1px);
   background-attachment: fixed;
+  overflow: hidden;
+  overflow-y: hidden;
 }
-
 
 .circular-piece {
   border-radius: 50%;
+  text-align: center;
+  color: white;
+}
+
+#leaderboard-container {
+  width: 400px;
+  height: 500px;
+  background-color: gray;
+  position: fixed;
+  top: 0;
+  right: 0;
+  overflow-y: auto;
+}
+
+#leaderboard-table {
+  width: 100%;
+  height: 100%;
+  font-family: 'Roboto', sans-serif;
+}
+
+#leaderboard-table td {
+  text-align: center;
+  color: white;
 }

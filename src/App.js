@@ -87,7 +87,7 @@ class App extends React.Component {
           break;
       }
     } else {
-      console.log("Error communicating with the game world");
+      console.log(`Error communicating with the game world: ${msg.msg}`);
     }
     
   }
@@ -141,15 +141,6 @@ class App extends React.Component {
     let gameWorld = new WebSocket(`ws://localhost:${port}`);
 
     this.setState({gameWorld: gameWorld}, () => {
-      this.state.gameWorld.addEventListener('open', () => {
-        let command = {
-          type: "CONNECT",
-          name: this.state.playerName
-        };
-    
-        this.state.gameWorld.send(JSON.stringify(command));
-      });
-
       this.state.gameWorld.addEventListener('message', (message) => {
 
         //Use the reviver to recreate maps that were replaced with 2d arrays.
@@ -164,6 +155,15 @@ class App extends React.Component {
         });
         console.log(msg);
         this.handleGameWorldMessage(msg);
+      });
+
+      this.state.gameWorld.addEventListener('open', () => {
+        let command = {
+          type: "CONNECT",
+          name: this.state.playerName
+        };
+    
+        this.state.gameWorld.send(JSON.stringify(command));
       });
     });
   }
@@ -204,7 +204,7 @@ class App extends React.Component {
       case PLAYING:
         return (
           <div id="app-container">
-            <Game gameData={this.state.gameData} />
+            <Game gameData={this.state.gameData} playerId={this.state.id}/>
           </div>
         );
       default:
