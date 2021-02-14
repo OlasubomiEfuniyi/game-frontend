@@ -1,23 +1,14 @@
 import React from "react";
 import Leaderboard from "./leaderboard";
+import {LEFT, RIGHT, UP, DOWN} from "./dir";
+import Piece from "./piece";
 
-const VELOCITY = 4;
-const LEFT = -1;
-const RIGHT = 1;
-const UP = -1;
-const DOWN = 1;
 
 class Game extends React.Component {
     constructor(props) {
         super(props);
 
-        let playerX = Number.parseInt(this.props.gameData.playerData.get(this.props.playerId).pieces[0]._x); //The x coordinate of the players piece
-        let playerY = Number.parseInt(this.props.gameData.playerData.get(this.props.playerId).pieces[0]._y); //The y coordinate of the players piece
         this.state = {
-            playerX: playerX,
-            playerY: playerY,
-            dirX: RIGHT, //The direction in which the x coordinate is changing. Values are either LEFT or RIGHT
-            dirY: UP, //The direction in which the y coordinate is changing. Values are either Up or Down
             playerData: this.props.gameData.playerData,
             foodData: this.props.gameData.foodData,
             leaderboard: this.props.gameData.leaderboard
@@ -26,48 +17,34 @@ class Game extends React.Component {
     
     componentDidMount() {
         //Scroll to the x and y coordinate of the player's piece
-        if(this.state.playerX && this.state.playerY) {
-            document.getElementById("game-container").scroll({
-                top: this.state.playerY,
-                left: this.state.playerX,
-                behavior: 'smooth'
-            });
-        }
+        //this.scrollToPlayer();
 
         //constantly update the player's x and y coordinates
-        window.setInterval(() => {
-            let element = document.getElementById("player-piece");
-            let newPlayerX = this.state.playerX + (this.state.dirX * VELOCITY);
-            let newPlayerY = this.state.playerY + (this.state.dirY * VELOCITY);
+        // window.setInterval(() => {
+        //     let element = document.getElementById("player-piece");
+        //     let newPlayerX = this.state.playerX + (this.state.dirX * VELOCITY);
+        //     let newPlayerY = this.state.playerY + (this.state.dirY * VELOCITY);
 
-            element.style.left = newPlayerX;
-            element.style.top = newPlayerY;
+        //     element.style.left = newPlayerX;
+        //     element.style.top = newPlayerY;
 
-            this.setState({playerX: newPlayerX, playerY: newPlayerY});
-        }, 10);
+        //     this.setState({playerX: newPlayerX, playerY: newPlayerY});
+        // }, 1);
     }
 
-    handleMouseMove(e) {
-        //Translate the position of this player's piece in the direction correspoinding to the mouse movement but with a constant velocity
+    scrollToPlayer(x,y) {
+        let top =  y >= (window.innerHeight) ? y - (window.innerHeight/2) : y; //Add half the height of the screen to the player's Y coordinate
+        let left = x >= (window.innerWidth)  ? x - (window.innerWidth/2) : x; //Add half the width of the screen to the player's X coordinate
 
-        let newDirX = this.state.dirX;
-        let newDirY = this.state.dirY;
-
-        if(e.movementX !== 0) {
-            newDirX = (e.movementX/Math.abs(e.movementX)) == LEFT ? LEFT : RIGHT;
-        }
-
-        if(e.movementY !== 0) {
-            newDirY = (e.movementY/Math.abs(e.movementY)) == UP ? UP : DOWN;
-        }
-        
-        //TODO: Inform the server of this player's new x and y coordinates
-
-        //Update the player's x and y coordinates
-        this.setState({dirX: newDirX, dirY: newDirY});
+        document.getElementById("game-container").scroll({
+            top: top,
+            left: left,
+            behavior: 'smooth'
+        });
     }
 
     render() {
+
         let allPlayerPieces = []; //An array to hold all the game pieces to be rendered for each player
         let foodPieces = []; //An array to hold all the food pieces to be rendered
         let i = 0;
@@ -88,15 +65,13 @@ class Game extends React.Component {
                 //close to instantaneous for them to see.
                 if(key === this.props.playerId) {
                     allPlayerPieces.push(
-                        <div key={i} id="player-piece" className="circular-piece" 
-                            style={{width: radius * 2, height: radius * 2, backgroundColor: color, position:"absolute", left: this.state.playerX + (this.state.dirX * VELOCITY), top: this.state.playerY + (this.state.dirY * VELOCITY)}}>{value.name}
-                        </div>
+                        <Piece key={i} playerX={x} playerY={y} color={color} radius={radius} 
+                        dirX={LEFT} dirY={UP} controllable={true} name={value.name} scrollToPlayer={(x, y) => this.scrollToPlayer(x,y)}/>
                     );
                 } else {
                     allPlayerPieces.push(
-                        <div key={i} className="circular-piece" 
-                            style={{width: radius * 2, height: radius * 2, backgroundColor: color, position:"absolute", left: x, top: y}}>{value.name}
-                        </div>
+                        <Piece key={i} playerX={x} playerY={y} color={color} radius={radius} 
+                        dirX={LEFT} dirY={UP} controllable={false} name={value.name} scrollToPlayer={(x, y) => this.scrollToPlayer(x,y)}/>
                     );
                 }
                 i++;                
@@ -115,7 +90,7 @@ class Game extends React.Component {
         });
 
         return (
-            <div id="game-container" onMouseMove={(e) => {this.handleMouseMove(e);}}>
+            <div id="game-container">
                 {foodPieces}
 
                 {allPlayerPieces}
