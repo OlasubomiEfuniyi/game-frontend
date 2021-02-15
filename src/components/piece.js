@@ -1,5 +1,4 @@
 import React from "react";
-import { createPortal } from "react-dom";
 import {LEFT, RIGHT, UP, DOWN} from "./dir";
 
 const VELOCITY = 10;
@@ -14,7 +13,11 @@ class Piece extends React.Component {
             dirX: [props.dirX], //index 0 contains the current x direction, index 1 contains the new x direction
             dirY: [props.dirY], //index 0 contains the current y direction, index 1 contains the new y direction
             turning: false,
-            velocity: VELOCITY,
+            //absolute x and y velocity are equal but their current values can differ during turning
+            velocityX: VELOCITY,    //Controls the rate at which the x coordinate of the piece changes
+            velocityY: VELOCITY,    //Controls the rate at which the y coordinate of the piece changes
+            currVelocityX: VELOCITY,
+            currVelocityY: VELOCITY,
             radius: props.radius,
             controllable: props.controllable //Only the player's pieces should be controllable
         }
@@ -23,36 +26,100 @@ class Piece extends React.Component {
     componentDidMount() {
         this.props.scrollToPlayer(this.state.playerX, this.state.playerY);
 
-        //TODO: Need to improve turning so that the piece moves along a curve. For example, if i am going right up and the direction changes to left up, then
-        //reduce the velocity for the x until it hits 0. switch to the new direction and gradually increase it for the x until it hits its previous value. Notice
-        //that the velocity for the y does not change in the process.
+        /* The code below assumes that as long as turning has been set to true, the dirX and dirY state will remain unchnaged
+        until it is reset to false */
         window.setInterval(() => {
             if(!this.state.turning) {
-                let newPlayerX = this.state.playerX + (this.state.dirX[0] * this.state.velocity);
-                let newPlayerY = this.state.playerY + (this.state.dirY[0] * this.state.velocity);
+                let newPlayerX = this.state.playerX + (this.state.dirX[0] * this.state.currVelocityX);
+                let newPlayerY = this.state.playerY + (this.state.dirY[0] * this.state.currVelocityY);
 
-                if(this.state.velocity < VELOCITY) {
-                    this.setState({playerX: newPlayerX, playerY: newPlayerY, velocity: this.state.velocity + 1});
+    
+                this.setState({playerX: newPlayerX, playerY: newPlayerY});     
+            } else if(this.state.turning && this.state.dirX.length === 2 && this.state.dirY.length == 2) {
+                    /* Find out which directions changed so i know which velocity to change. Since a turn is happening,
+                    booth the x and y directions must have exactly two values in them */
+                    let xChanged = this.state.dirX[0] !== this.state.dirX[1];
+                    let yChanged = this.state.dirY[0] !== this.state.dirY[1];
+                    let newVelocityX = this.state.currVelocityX;
+                    let newVelocityY = this.state.currVelocityY;
+                    
+                    if(xChanged && !yChanged) {
+                        console.log("reducing velocity");
+                        //If x direction changed but y direction did no change, start decrementing x velocity until it hits 0.
+                        if(this.state.currVelocityX > 0) {
+                            newVelocityX = this.state.currVelocityX - 0.5;
+                        } else {
+                            let newDirX = this.state.dirX[1];
+                            let newDirY = this.state.dirY[1];
+
+                            this.state.dirX.pop();
+                            this.state.dirY.pop();
+
+                            this.state.dirX[0] = newDirX;
+                            this.state.dirY[0] = newDirY;
+
+                            this.setState({dirX: this.state.dirX, dirY: this.state.dirY});
+                        }
+                    } else if(yChanged && !xChanged) {
+                        //if y direction changed but x direction did not, start decrementing y velocity until it hits 0
+                        if(this.state.currVelocityY > 0) { 
+                            newVelocityY = this.state.currVelocityY - 0.5;
+                        } else {
+                            let newDirX = this.state.dirX[1];
+                            let newDirY = this.state.dirY[1];
+
+                            this.state.dirX.pop();
+                            this.state.dirY.pop();
+
+                            this.state.dirX[0] = newDirX;
+                            this.state.dirY[0] = newDirY;
+
+                            this.setState({dirX: this.state.dirX, dirY: this.state.dirY});
+                        }
+                    } else if(xChanged && yChanged) {
+                        //If both directions changed, start decrementing both velocities until they hit 0
+                        //Since they are starting from the same place, they should hit 0 at the same time
+                        if(this.state.currVelocityX > 0 && this.state.currVelocityY > 0) { 
+                            newVelocityX = this.state.currVelocityX - 0.5;
+                            newVelocityY = this.state.currVelocityY - 0.5;
+                        } else {
+                            let newDirX = this.state.dirX[1];
+                            let newDirY = this.state.dirY[1];
+
+                            this.state.dirX.pop();
+                            this.state.dirY.pop();
+
+                            this.state.dirX[0] = newDirX;
+                            this.state.dirY[0] = newDirY;
+
+                            this.setState({dirX: this.state.dirX, dirY: this.state.dirY});
+                        }
+                    } else { //One direction must change if a turn is happening
+                        console.log("Expected a direction to change but did not");
+                    }
+
+                    let newPlayerX = this.state.playerX + (this.state.dirX[0] * this.state.currVelocityX);
+                    let newPlayerY = this.state.playerY + (this.state.dirY[0] * this.state.currVelocityY);
+                    this.setState({currVelocityX: newVelocityX, currVelocityY: newVelocityY, playerX: newPlayerX, playerY: newPlayerY});
+                    
+            } else if(this.state.turning) {
+                // if(this.state.zeroCount < 500) {
+                //     this.setState({zeroCount: this.state.zeroCount + 1});
+                // }
+                //Time to increment the appropriate velocity while moving in the new direction
+                if(this.state.currVelocityX < this.state.velocityX && this.state.currVelocityY === this.state.velocityY) {
+                    console.log("increasing velocity");
+                    //Only x direction changed and so only its velocity needs to be restored
+                    this.setState({currVelocityX: this.state.currVelocityX + 1});
+                } else if(this.state.currVelocityY < this.state.velocityY && this.state.currVelocityX === this.state.velocityX) {
+                    //Only y direction changed and so only its velocity needs to be restored
+                    this.setState({currVelocityY: this.state.currVelocityY + 1});
+                } else if(this.state.currVelocityY < this.state.velocityX && this.state.currVelocityX < this.state.velocityX) {
+                    //Both directions changes so both velocities need to be restored
+                    this.setState({currVelocityX: this.state.currVelocityX + 1, currVelocityY: this.state.currVelocityY + 1});
                 } else {
-                    this.setState({playerX: newPlayerX, playerY: newPlayerY});
-                }
-                
-            } else {
-                //Keep on reducing the velocity until it hits 0. make the swich in direction and gradually increase the velocity until it is
-                //back to its original value
-                if(this.state.velocity > 0) {
-                    this.setState({velocity: this.state.velocity - 1});
-                } else {
-                    let newDirX = this.state.dirX[1];
-                    let newDirY = this.state.dirY[1];
-
-                    this.state.dirX.pop();
-                    this.state.dirY.pop();
-
-                    this.state.dirX[0] = newDirX;
-                    this.state.dirY[0] = newDirY;
-
-                    this.setState({dirX: this.state.dirX, dirY: this.state.dirY, velocity: 1, turning: false});
+                    //Both are fully restored, turn off turning
+                    this.setState({turning: false, zeroCount: 0});
                 }
             }
 
