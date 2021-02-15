@@ -127,7 +127,13 @@ class Piece extends React.Component {
         window.onmousemove = (e) => {
             this.handleMouseMove(e);
         }
+
+        // window.setInterval(() => {
+        //     this.props.scrollToPlayer(this.state.playerX, this.state.playerY);
+
+        // }, 5000);
     }
+
 
     handleMouseMove(e) {
         if(this.state.controllable && !this.state.turning) {
@@ -147,7 +153,6 @@ class Piece extends React.Component {
                 newDirY = (e.movementY/Math.abs(e.movementY)) == -1 ? UP : DOWN;
             }
             
-
             //TODO: Inform the server of this player's new x and y coordinates
 
             let turning = (newDirX !== oldDirX) || (newDirY !== oldDirY);
