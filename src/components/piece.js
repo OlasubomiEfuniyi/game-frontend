@@ -2,6 +2,7 @@ import React from "react";
 import {LEFT, RIGHT, UP, DOWN} from "./dir";
 
 const VELOCITY = 10;
+const VELOCITY_QUOTIENT = 100; 
 
 class Piece extends React.Component {
     constructor(props) {
@@ -27,7 +28,7 @@ class Piece extends React.Component {
         this.props.scrollToPlayer(this.state.playerX, this.state.playerY);
 
         /* The code below assumes that as long as turning has been set to true, the dirX and dirY state will remain unchnaged
-        until it is reset to false */
+        until it is reset to false. */
         window.setInterval(() => {
             if(!this.state.turning) {
                 let newPlayerX = this.state.playerX + (this.state.dirX[0] * this.state.currVelocityX);
@@ -44,10 +45,9 @@ class Piece extends React.Component {
                     let newVelocityY = this.state.currVelocityY;
                     
                     if(xChanged && !yChanged) {
-                        console.log("reducing velocity");
                         //If x direction changed but y direction did no change, start decrementing x velocity until it hits 0.
                         if(this.state.currVelocityX > 0) {
-                            newVelocityX = this.state.currVelocityX - 0.5;
+                            newVelocityX = this.state.currVelocityX - (this.state.velocityX/VELOCITY_QUOTIENT);
                         } else {
                             let newDirX = this.state.dirX[1];
                             let newDirY = this.state.dirY[1];
@@ -63,7 +63,7 @@ class Piece extends React.Component {
                     } else if(yChanged && !xChanged) {
                         //if y direction changed but x direction did not, start decrementing y velocity until it hits 0
                         if(this.state.currVelocityY > 0) { 
-                            newVelocityY = this.state.currVelocityY - 0.5;
+                            newVelocityY = this.state.currVelocityY - (this.state.velocityY/VELOCITY_QUOTIENT);
                         } else {
                             let newDirX = this.state.dirX[1];
                             let newDirY = this.state.dirY[1];
@@ -80,8 +80,8 @@ class Piece extends React.Component {
                         //If both directions changed, start decrementing both velocities until they hit 0
                         //Since they are starting from the same place, they should hit 0 at the same time
                         if(this.state.currVelocityX > 0 && this.state.currVelocityY > 0) { 
-                            newVelocityX = this.state.currVelocityX - 0.5;
-                            newVelocityY = this.state.currVelocityY - 0.5;
+                            newVelocityX = this.state.currVelocityX - (this.state.velocityX/VELOCITY_QUOTIENT);
+                            newVelocityY = this.state.currVelocityY - (this.state.velocityY/VELOCITY_QUOTIENT);
                         } else {
                             let newDirX = this.state.dirX[1];
                             let newDirY = this.state.dirY[1];
@@ -103,20 +103,19 @@ class Piece extends React.Component {
                     this.setState({currVelocityX: newVelocityX, currVelocityY: newVelocityY, playerX: newPlayerX, playerY: newPlayerY});
                     
             } else if(this.state.turning) {
-                // if(this.state.zeroCount < 500) {
-                //     this.setState({zeroCount: this.state.zeroCount + 1});
-                // }
+                let newPlayerX = this.state.playerX + (this.state.dirX[0] * this.state.currVelocityX);
+                let newPlayerY = this.state.playerY + (this.state.dirY[0] * this.state.currVelocityY);
+
                 //Time to increment the appropriate velocity while moving in the new direction
                 if(this.state.currVelocityX < this.state.velocityX && this.state.currVelocityY === this.state.velocityY) {
-                    console.log("increasing velocity");
                     //Only x direction changed and so only its velocity needs to be restored
-                    this.setState({currVelocityX: this.state.currVelocityX + 1});
+                    this.setState({playerX: newPlayerX, playerY: newPlayerY, currVelocityX: this.state.currVelocityX + (this.state.velocityX/VELOCITY_QUOTIENT)});
                 } else if(this.state.currVelocityY < this.state.velocityY && this.state.currVelocityX === this.state.velocityX) {
                     //Only y direction changed and so only its velocity needs to be restored
-                    this.setState({currVelocityY: this.state.currVelocityY + 1});
+                    this.setState({playerX: newPlayerX, playerY: newPlayerY, currVelocityY: this.state.currVelocityY + (this.state.velocityY/VELOCITY_QUOTIENT)});
                 } else if(this.state.currVelocityY < this.state.velocityX && this.state.currVelocityX < this.state.velocityX) {
                     //Both directions changes so both velocities need to be restored
-                    this.setState({currVelocityX: this.state.currVelocityX + 1, currVelocityY: this.state.currVelocityY + 1});
+                    this.setState({playerX: newPlayerX, playerY: newPlayerY, currVelocityX: this.state.currVelocityX + (this.state.velocityX/VELOCITY_QUOTIENT), currVelocityY: this.state.currVelocityY + (this.state.velocityY/VELOCITY_QUOTIENT)});
                 } else {
                     //Both are fully restored, turn off turning
                     this.setState({turning: false, zeroCount: 0});
