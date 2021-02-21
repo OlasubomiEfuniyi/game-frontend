@@ -1,6 +1,6 @@
 import React from "react";
 import Leaderboard from "./leaderboard";
-import {LEFT, RIGHT, UP, DOWN} from "./dir";
+import {LEFT, RIGHT, UP, DOWN} from "./game_constants";
 import Piece from "./piece";
 
 
